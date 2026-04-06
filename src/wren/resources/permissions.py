@@ -11,7 +11,7 @@ class PermissionsResource:
         self._http = http
 
     def list(self) -> list[Permission]:
-        data = self._http.request("GET", "/api/permissions")
+        data = self._http.request("GET", "/permissions")
         return [_parse_permission(p) for p in data.get("permissions", [])]
 
     def create(
@@ -36,7 +36,7 @@ class PermissionsResource:
             "auditReads": audit_reads,
             "auditWrites": audit_writes,
         }
-        data = self._http.request("POST", "/api/permissions", body=body)
+        data = self._http.request("POST", "/permissions", body=body)
         return _parse_permission(data)
 
     def update(
@@ -58,11 +58,11 @@ class PermissionsResource:
             "auditReads": audit_reads,
             "auditWrites": audit_writes,
         }
-        data = self._http.request("PATCH", f"/api/permissions/{id}", body=body)
+        data = self._http.request("PATCH", f"/permissions/{id}", body=body)
         return _parse_permission(data)
 
     def delete(self, id: str) -> dict[str, Any]:
-        return self._http.request("DELETE", f"/api/permissions/{id}")  # type: ignore[return-value]
+        return self._http.request("DELETE", f"/permissions/{id}")  # type: ignore[return-value]
 
 
 class AsyncPermissionsResource:
@@ -70,7 +70,7 @@ class AsyncPermissionsResource:
         self._http = http
 
     async def list(self) -> list[Permission]:
-        data = await self._http.request("GET", "/api/permissions")
+        data = await self._http.request("GET", "/permissions")
         return [_parse_permission(p) for p in data.get("permissions", [])]
 
     async def create(
@@ -95,7 +95,7 @@ class AsyncPermissionsResource:
             "auditReads": audit_reads,
             "auditWrites": audit_writes,
         }
-        data = await self._http.request("POST", "/api/permissions", body=body)
+        data = await self._http.request("POST", "/permissions", body=body)
         return _parse_permission(data)
 
     async def update(
@@ -117,8 +117,8 @@ class AsyncPermissionsResource:
             "auditReads": audit_reads,
             "auditWrites": audit_writes,
         }
-        data = await self._http.request("PATCH", f"/api/permissions/{id}", body=body)
+        data = await self._http.request("PATCH", f"/permissions/{id}", body=body)
         return _parse_permission(data)
 
     async def delete(self, id: str) -> dict[str, Any]:
-        return await self._http.request("DELETE", f"/api/permissions/{id}")  # type: ignore[return-value]
+        return await self._http.request("DELETE", f"/permissions/{id}")  # type: ignore[return-value]
