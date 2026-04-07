@@ -11,15 +11,15 @@ class KeysResource:
         self._http = http
 
     def list(self) -> list[ApiKey]:
-        data = self._http.request("GET", "/api/keys")
+        data = self._http.request("GET", "/keys")
         return [_parse_api_key(k) for k in data.get("keys", [])]
 
     def create(self, name: str) -> ApiKeyCreated:
-        data = self._http.request("POST", "/api/keys", body={"name": name})
+        data = self._http.request("POST", "/keys", body={"name": name})
         return _parse_api_key_created(data)
 
     def revoke(self, id: str) -> dict[str, Any]:
-        return self._http.request("DELETE", f"/api/keys/{id}")  # type: ignore[return-value]
+        return self._http.request("DELETE", f"/keys/{id}")  # type: ignore[return-value]
 
 
 class AsyncKeysResource:
@@ -27,12 +27,12 @@ class AsyncKeysResource:
         self._http = http
 
     async def list(self) -> list[ApiKey]:
-        data = await self._http.request("GET", "/api/keys")
+        data = await self._http.request("GET", "/keys")
         return [_parse_api_key(k) for k in data.get("keys", [])]
 
     async def create(self, name: str) -> ApiKeyCreated:
-        data = await self._http.request("POST", "/api/keys", body={"name": name})
+        data = await self._http.request("POST", "/keys", body={"name": name})
         return _parse_api_key_created(data)
 
     async def revoke(self, id: str) -> dict[str, Any]:
-        return await self._http.request("DELETE", f"/api/keys/{id}")  # type: ignore[return-value]
+        return await self._http.request("DELETE", f"/keys/{id}")  # type: ignore[return-value]

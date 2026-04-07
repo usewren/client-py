@@ -61,7 +61,7 @@ class _HttpClient:
         body: Optional[dict[str, Any]] = None,
         params: Optional[dict[str, Any]] = None,
     ) -> Any:
-        url = f"{self._base_url}{path}"
+        url = f"{self._base_url}/api/v1{path}"
         filtered_params = _filter_none(params)
         filtered_body = _filter_none(body)
 
@@ -116,7 +116,7 @@ class _AsyncHttpClient:
         body: Optional[dict[str, Any]] = None,
         params: Optional[dict[str, Any]] = None,
     ) -> Any:
-        url = f"{self._base_url}{path}"
+        url = f"{self._base_url}/api/v1{path}"
         filtered_params = _filter_none(params)
         filtered_body = _filter_none(body)
 
