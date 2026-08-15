@@ -20,6 +20,7 @@ class PermissionsResource:
         resource: str,
         access: str,
         *,
+        alias: Optional[str] = None,
         label_filter: Optional[str] = None,
         filter_lang: Optional[str] = None,
         filter_expr: Optional[str] = None,
@@ -30,6 +31,7 @@ class PermissionsResource:
             "principal": principal,
             "resource": resource,
             "access": access,
+            "alias": alias,
             "labelFilter": label_filter,
             "filterLang": filter_lang,
             "filterExpr": filter_expr,
@@ -44,6 +46,7 @@ class PermissionsResource:
         id: str,
         *,
         access: Optional[str] = None,
+        alias: Optional[str] = None,
         label_filter: Optional[str] = None,
         filter_lang: Optional[str] = None,
         filter_expr: Optional[str] = None,
@@ -52,6 +55,7 @@ class PermissionsResource:
     ) -> Permission:
         body: dict[str, Any] = {
             "access": access,
+            "alias": alias,
             "labelFilter": label_filter,
             "filterLang": filter_lang,
             "filterExpr": filter_expr,
@@ -79,6 +83,7 @@ class AsyncPermissionsResource:
         resource: str,
         access: str,
         *,
+        alias: Optional[str] = None,
         label_filter: Optional[str] = None,
         filter_lang: Optional[str] = None,
         filter_expr: Optional[str] = None,
@@ -89,6 +94,7 @@ class AsyncPermissionsResource:
             "principal": principal,
             "resource": resource,
             "access": access,
+            "alias": alias,
             "labelFilter": label_filter,
             "filterLang": filter_lang,
             "filterExpr": filter_expr,
@@ -103,6 +109,7 @@ class AsyncPermissionsResource:
         id: str,
         *,
         access: Optional[str] = None,
+        alias: Optional[str] = None,
         label_filter: Optional[str] = None,
         filter_lang: Optional[str] = None,
         filter_expr: Optional[str] = None,
@@ -111,6 +118,7 @@ class AsyncPermissionsResource:
     ) -> Permission:
         body: dict[str, Any] = {
             "access": access,
+            "alias": alias,
             "labelFilter": label_filter,
             "filterLang": filter_lang,
             "filterExpr": filter_expr,

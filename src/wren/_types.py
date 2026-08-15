@@ -141,6 +141,9 @@ class Schema:
     schema: Optional[dict[str, Any]]
     display_name: Optional[str]
     updated_at: str
+    natural_key: Optional[str] = None
+    list_columns: Optional[list[str]] = None
+    indexes: Optional[list[dict[str, Any]]] = None
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +260,7 @@ class Permission:
     audit_reads: bool
     audit_writes: bool
     created_at: str
+    alias: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -356,6 +360,9 @@ def _parse_schema(data: dict[str, Any]) -> Schema:
         schema=data.get("schema"),
         display_name=data.get("displayName", data.get("display_name")),
         updated_at=data.get("updatedAt", data.get("updated_at", "")),
+        natural_key=data.get("naturalKey", data.get("natural_key")),
+        list_columns=data.get("listColumns", data.get("list_columns")),
+        indexes=data.get("indexes"),
     )
 
 
@@ -482,4 +489,155 @@ def _parse_permission(data: dict[str, Any]) -> Permission:
         audit_reads=data.get("auditReads", data.get("audit_reads", False)),
         audit_writes=data.get("auditWrites", data.get("audit_writes", False)),
         created_at=data.get("createdAt", data.get("created_at", "")),
+        alias=data.get("alias"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Query types
+# ---------------------------------------------------------------------------
+
+@dataclasses.dataclass
+class QueryResult:
+    items: Optional[list[dict[str, Any]]] = None
+    rows: Optional[list[dict[str, Any]]] = None
+    cursor: Optional[str] = None
+
+
+def _parse_query_result(data: dict[str, Any]) -> QueryResult:
+    return QueryResult(
+        items=data.get("items"),
+        rows=data.get("rows"),
+        cursor=data.get("cursor"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Materialized query types
+# ---------------------------------------------------------------------------
+
+@dataclasses.dataclass
+class MaterializedQuery:
+    name: str
+    refresh_on: str
+    result_doc_id: Optional[str]
+    created_at: str
+    updated_at: str
+
+
+@dataclasses.dataclass
+class MaterializedResult:
+    collection: str
+    name: str
+    result: dict[str, Any]
+
+
+def _parse_materialized_query(data: dict[str, Any]) -> MaterializedQuery:
+    return MaterializedQuery(
+        name=data.get("name", ""),
+        refresh_on=data.get("refreshOn", data.get("refresh_on", "")),
+        result_doc_id=data.get("resultDocId", data.get("result_doc_id")),
+        created_at=data.get("createdAt", data.get("created_at", "")),
+        updated_at=data.get("updatedAt", data.get("updated_at", "")),
+    )
+
+
+def _parse_materialized_result(data: dict[str, Any]) -> MaterializedResult:
+    return MaterializedResult(
+        collection=data.get("collection", ""),
+        name=data.get("name", ""),
+        result=data.get("result", {}),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Webhook types
+# ---------------------------------------------------------------------------
+
+@dataclasses.dataclass
+class Webhook:
+    id: str
+    url: str
+    events: list[str]
+    enabled: bool
+    consec_failures: int
+    created_at: str
+    updated_at: str
+
+
+@dataclasses.dataclass
+class WebhookCreated(Webhook):
+    secret: str = ""
+
+
+@dataclasses.dataclass
+class WebhookDelivery:
+    id: str
+    batch_key: str
+    event_count: int
+    attempt: int
+    status_code: Optional[int]
+    error: Optional[str]
+    delivered_at: str
+
+
+def _parse_webhook(data: dict[str, Any]) -> Webhook:
+    return Webhook(
+        id=data.get("id", ""),
+        url=data.get("url", ""),
+        events=data.get("events", []),
+        enabled=data.get("enabled", True),
+        consec_failures=data.get("consecFailures", data.get("consec_failures", 0)),
+        created_at=data.get("createdAt", data.get("created_at", "")),
+        updated_at=data.get("updatedAt", data.get("updated_at", "")),
+    )
+
+
+def _parse_webhook_created(data: dict[str, Any]) -> WebhookCreated:
+    return WebhookCreated(
+        id=data.get("id", ""),
+        url=data.get("url", ""),
+        events=data.get("events", []),
+        enabled=data.get("enabled", True),
+        consec_failures=data.get("consecFailures", data.get("consec_failures", 0)),
+        created_at=data.get("createdAt", data.get("created_at", "")),
+        updated_at=data.get("updatedAt", data.get("updated_at", "")),
+        secret=data.get("secret", ""),
+    )
+
+
+def _parse_webhook_delivery(data: dict[str, Any]) -> WebhookDelivery:
+    return WebhookDelivery(
+        id=data.get("id", ""),
+        batch_key=data.get("batchKey", data.get("batch_key", "")),
+        event_count=data.get("eventCount", data.get("event_count", 0)),
+        attempt=data.get("attempt", 0),
+        status_code=data.get("statusCode", data.get("status_code")),
+        error=data.get("error"),
+        delivered_at=data.get("deliveredAt", data.get("delivered_at", "")),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Schema validation types
+# ---------------------------------------------------------------------------
+
+@dataclasses.dataclass
+class ValidateSchemaResult:
+    collection: str
+    schema_source: str
+    checked: int
+    valid: int
+    invalid: int
+    failures: list[dict[str, Any]]
+
+
+def _parse_validate_schema_result(data: dict[str, Any]) -> ValidateSchemaResult:
+    return ValidateSchemaResult(
+        collection=data.get("collection", ""),
+        schema_source=data.get("schemaSource", data.get("schema_source", "")),
+        checked=data.get("checked", 0),
+        valid=data.get("valid", 0),
+        invalid=data.get("invalid", 0),
+        failures=data.get("failures", []),
     )

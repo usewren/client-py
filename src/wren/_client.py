@@ -9,10 +9,13 @@ from wren.resources.documents import AsyncDocumentsResource, DocumentsResource
 from wren.resources.invites import AsyncInvitesResource, InvitesResource
 from wren.resources.keys import AsyncKeysResource, KeysResource
 from wren.resources.labels import AsyncLabelsResource, LabelsResource
+from wren.resources.materialized import AsyncMaterializedResource, MaterializedResource
 from wren.resources.members import AsyncMembersResource, MembersResource
 from wren.resources.permissions import AsyncPermissionsResource, PermissionsResource
+from wren.resources.query import AsyncQueryResource, QueryResource
 from wren.resources.trees import AsyncTreesResource, TreesResource
 from wren.resources.versions import AsyncVersionsResource, VersionsResource
+from wren.resources.webhooks import AsyncWebhooksResource, WebhooksResource
 
 
 class WrenClient:
@@ -30,6 +33,9 @@ class WrenClient:
         self.members = MembersResource(self._http)
         self.invites = InvitesResource(self._http)
         self.permissions = PermissionsResource(self._http)
+        self.query = QueryResource(self._http)
+        self.materialized = MaterializedResource(self._http)
+        self.webhooks = WebhooksResource(self._http)
 
     def close(self) -> None:
         self._http.close()
@@ -56,6 +62,9 @@ class AsyncWrenClient:
         self.members = AsyncMembersResource(self._http)
         self.invites = AsyncInvitesResource(self._http)
         self.permissions = AsyncPermissionsResource(self._http)
+        self.query = AsyncQueryResource(self._http)
+        self.materialized = AsyncMaterializedResource(self._http)
+        self.webhooks = AsyncWebhooksResource(self._http)
 
     async def aclose(self) -> None:
         await self._http.aclose()

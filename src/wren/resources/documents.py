@@ -26,6 +26,9 @@ class DocumentsResource:
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
         facets: Optional[str] = None,
+        select: Optional[str] = None,
+        where: Optional[str] = None,
+        depth: Optional[int] = None,
     ) -> DocumentList:
         params: dict[str, Any] = {
             "label": label,
@@ -33,6 +36,9 @@ class DocumentsResource:
             "limit": limit,
             "cursor": cursor,
             "facets": facets,
+            "select": select,
+            "where": where,
+            "depth": depth,
         }
         data = self._http.request("GET", f"/api/collections/{collection}/documents", params=params)
         return _parse_document_list(data)
@@ -43,8 +49,9 @@ class DocumentsResource:
         id: str,
         *,
         label: Optional[str] = None,
+        depth: Optional[int] = None,
     ) -> DocumentResponse:
-        params: dict[str, Any] = {"label": label}
+        params: dict[str, Any] = {"label": label, "depth": depth}
         data = self._http.request("GET", f"/api/collections/{collection}/documents/{id}", params=params)
         return _parse_document_response(data)
 
@@ -71,6 +78,34 @@ class DocumentsResource:
         data = self._http.request("GET", f"/api/collections/{collection}/documents/{id}/paths")
         return _parse_document_paths(data)
 
+    def get_by_key(
+        self,
+        collection: str,
+        key_value: str,
+        *,
+        label: Optional[str] = None,
+        depth: Optional[int] = None,
+    ) -> DocumentResponse:
+        params: dict[str, Any] = {"label": label, "depth": depth}
+        data = self._http.request("GET", f"/api/collections/{collection}/documents/key/{key_value}", params=params)
+        return _parse_document_response(data)
+
+    def upsert_by_key(
+        self,
+        collection: str,
+        key_value: str,
+        data: dict[str, Any],
+    ) -> DocumentResponse:
+        resp = self._http.request(
+            "PUT",
+            f"/api/collections/{collection}/documents/key/{key_value}",
+            body={"data": data},
+        )
+        return _parse_document_response(resp)
+
+    def delete_by_key(self, collection: str, key_value: str) -> dict[str, Any]:
+        return self._http.request("DELETE", f"/api/collections/{collection}/documents/key/{key_value}")  # type: ignore[return-value]
+
 
 class AsyncDocumentsResource:
     def __init__(self, http: _AsyncHttpClient) -> None:
@@ -85,6 +120,9 @@ class AsyncDocumentsResource:
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
         facets: Optional[str] = None,
+        select: Optional[str] = None,
+        where: Optional[str] = None,
+        depth: Optional[int] = None,
     ) -> DocumentList:
         params: dict[str, Any] = {
             "label": label,
@@ -92,6 +130,9 @@ class AsyncDocumentsResource:
             "limit": limit,
             "cursor": cursor,
             "facets": facets,
+            "select": select,
+            "where": where,
+            "depth": depth,
         }
         data = await self._http.request("GET", f"/api/collections/{collection}/documents", params=params)
         return _parse_document_list(data)
@@ -102,8 +143,9 @@ class AsyncDocumentsResource:
         id: str,
         *,
         label: Optional[str] = None,
+        depth: Optional[int] = None,
     ) -> DocumentResponse:
-        params: dict[str, Any] = {"label": label}
+        params: dict[str, Any] = {"label": label, "depth": depth}
         data = await self._http.request("GET", f"/api/collections/{collection}/documents/{id}", params=params)
         return _parse_document_response(data)
 
@@ -129,3 +171,31 @@ class AsyncDocumentsResource:
     async def get_paths(self, collection: str, id: str) -> DocumentPaths:
         data = await self._http.request("GET", f"/api/collections/{collection}/documents/{id}/paths")
         return _parse_document_paths(data)
+
+    async def get_by_key(
+        self,
+        collection: str,
+        key_value: str,
+        *,
+        label: Optional[str] = None,
+        depth: Optional[int] = None,
+    ) -> DocumentResponse:
+        params: dict[str, Any] = {"label": label, "depth": depth}
+        data = await self._http.request("GET", f"/api/collections/{collection}/documents/key/{key_value}", params=params)
+        return _parse_document_response(data)
+
+    async def upsert_by_key(
+        self,
+        collection: str,
+        key_value: str,
+        data: dict[str, Any],
+    ) -> DocumentResponse:
+        resp = await self._http.request(
+            "PUT",
+            f"/api/collections/{collection}/documents/key/{key_value}",
+            body={"data": data},
+        )
+        return _parse_document_response(resp)
+
+    async def delete_by_key(self, collection: str, key_value: str) -> dict[str, Any]:
+        return await self._http.request("DELETE", f"/api/collections/{collection}/documents/key/{key_value}")  # type: ignore[return-value]
