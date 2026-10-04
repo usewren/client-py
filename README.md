@@ -3,7 +3,7 @@
 Official Python client for the [WREN](https://wren.aemwip.com) API.
 
 ```bash
-pip install wren-client
+pip install usewren-client
 ```
 
 ```python
