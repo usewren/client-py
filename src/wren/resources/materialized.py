@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from wren._http import _AsyncHttpClient, _HttpClient
+from wren._http import _AsyncHttpClient, _enc, _HttpClient
 from wren._types import (
     MaterializedQuery,
     MaterializedResult,
@@ -16,11 +16,11 @@ class MaterializedResource:
         self._http = http
 
     def list(self, collection: str) -> list[MaterializedQuery]:
-        data = self._http.request("GET", f"/api/collections/{collection}/materialized")
-        return [_parse_materialized_query(m) for m in data.get("queries", [])]
+        data = self._http.request("GET", f"/{collection}/_materialized")
+        return [_parse_materialized_query(m) for m in data.get("materialized", [])]
 
     def get(self, collection: str, name: str) -> MaterializedResult:
-        data = self._http.request("GET", f"/api/collections/{collection}/materialized/{name}")
+        data = self._http.request("GET", f"/{collection}/_materialized/{_enc(name)}")
         return _parse_materialized_result(data)
 
     def set(
@@ -34,11 +34,11 @@ class MaterializedResource:
             "query": query,
             "refreshOn": refresh_on,
         }
-        data = self._http.request("PUT", f"/api/collections/{collection}/materialized/{name}", body=body)
+        data = self._http.request("PUT", f"/{collection}/_materialized/{_enc(name)}", body=body)
         return _parse_materialized_query(data)
 
     def delete(self, collection: str, name: str) -> dict[str, Any]:
-        return self._http.request("DELETE", f"/api/collections/{collection}/materialized/{name}")  # type: ignore[return-value]
+        return self._http.request("DELETE", f"/{collection}/_materialized/{_enc(name)}")  # type: ignore[return-value]
 
 
 class AsyncMaterializedResource:
@@ -46,11 +46,11 @@ class AsyncMaterializedResource:
         self._http = http
 
     async def list(self, collection: str) -> list[MaterializedQuery]:
-        data = await self._http.request("GET", f"/api/collections/{collection}/materialized")
-        return [_parse_materialized_query(m) for m in data.get("queries", [])]
+        data = await self._http.request("GET", f"/{collection}/_materialized")
+        return [_parse_materialized_query(m) for m in data.get("materialized", [])]
 
     async def get(self, collection: str, name: str) -> MaterializedResult:
-        data = await self._http.request("GET", f"/api/collections/{collection}/materialized/{name}")
+        data = await self._http.request("GET", f"/{collection}/_materialized/{_enc(name)}")
         return _parse_materialized_result(data)
 
     async def set(
@@ -64,8 +64,8 @@ class AsyncMaterializedResource:
             "query": query,
             "refreshOn": refresh_on,
         }
-        data = await self._http.request("PUT", f"/api/collections/{collection}/materialized/{name}", body=body)
+        data = await self._http.request("PUT", f"/{collection}/_materialized/{_enc(name)}", body=body)
         return _parse_materialized_query(data)
 
     async def delete(self, collection: str, name: str) -> dict[str, Any]:
-        return await self._http.request("DELETE", f"/api/collections/{collection}/materialized/{name}")  # type: ignore[return-value]
+        return await self._http.request("DELETE", f"/{collection}/_materialized/{_enc(name)}")  # type: ignore[return-value]

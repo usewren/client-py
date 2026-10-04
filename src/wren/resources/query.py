@@ -14,13 +14,14 @@ class QueryResource:
         self,
         collection: str,
         *,
-        where: Optional[dict[str, Any]] = None,
+        where: Optional[str] = None,
         select: Optional[list[str]] = None,
         aggregate: Optional[dict[str, Any]] = None,
         label: Optional[str] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> QueryResult:
+        # ``where`` is a filter expression, e.g. "category:news AND year>=2024"
         body: dict[str, Any] = {
             "where": where,
             "select": select,
@@ -29,7 +30,7 @@ class QueryResource:
             "limit": limit,
             "cursor": cursor,
         }
-        data = self._http.request("POST", f"/api/collections/{collection}/query", body=body)
+        data = self._http.request("POST", f"/{collection}/_query", body=body)
         return _parse_query_result(data)
 
 
@@ -41,13 +42,14 @@ class AsyncQueryResource:
         self,
         collection: str,
         *,
-        where: Optional[dict[str, Any]] = None,
+        where: Optional[str] = None,
         select: Optional[list[str]] = None,
         aggregate: Optional[dict[str, Any]] = None,
         label: Optional[str] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> QueryResult:
+        # ``where`` is a filter expression, e.g. "category:news AND year>=2024"
         body: dict[str, Any] = {
             "where": where,
             "select": select,
@@ -56,5 +58,5 @@ class AsyncQueryResource:
             "limit": limit,
             "cursor": cursor,
         }
-        data = await self._http.request("POST", f"/api/collections/{collection}/query", body=body)
+        data = await self._http.request("POST", f"/{collection}/_query", body=body)
         return _parse_query_result(data)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from wren._http import _AsyncHttpClient, _HttpClient
+from wren._http import _AsyncHttpClient, _enc, _HttpClient
 from wren._types import Permission, _parse_permission
 
 
@@ -62,11 +62,11 @@ class PermissionsResource:
             "auditReads": audit_reads,
             "auditWrites": audit_writes,
         }
-        data = self._http.request("PATCH", f"/permissions/{id}", body=body)
+        data = self._http.request("PUT", f"/permissions/{_enc(id)}", body=body)
         return _parse_permission(data)
 
     def delete(self, id: str) -> dict[str, Any]:
-        return self._http.request("DELETE", f"/permissions/{id}")  # type: ignore[return-value]
+        return self._http.request("DELETE", f"/permissions/{_enc(id)}")  # type: ignore[return-value]
 
 
 class AsyncPermissionsResource:
@@ -125,8 +125,8 @@ class AsyncPermissionsResource:
             "auditReads": audit_reads,
             "auditWrites": audit_writes,
         }
-        data = await self._http.request("PATCH", f"/permissions/{id}", body=body)
+        data = await self._http.request("PUT", f"/permissions/{_enc(id)}", body=body)
         return _parse_permission(data)
 
     async def delete(self, id: str) -> dict[str, Any]:
-        return await self._http.request("DELETE", f"/permissions/{id}")  # type: ignore[return-value]
+        return await self._http.request("DELETE", f"/permissions/{_enc(id)}")  # type: ignore[return-value]

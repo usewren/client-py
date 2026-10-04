@@ -51,17 +51,11 @@ def _parse(cls: type[T], data: dict[str, Any]) -> T:
 # ---------------------------------------------------------------------------
 
 @dataclasses.dataclass
-class FacetValue:
-    value: str
-    count: int
-
-
-@dataclasses.dataclass
 class DocumentResponse:
     collection: str
     id: str
     version: int
-    labels: dict[str, str]
+    labels: list[str]
     created_at: str
     updated_at: str
     data: dict[str, Any]
@@ -71,8 +65,6 @@ class DocumentResponse:
 class DocumentList:
     collection: str
     total: int
-    cursor: Optional[str]
-    facets: dict[str, list[FacetValue]]
     items: list[DocumentResponse]
 
 
@@ -90,7 +82,7 @@ class DocumentPaths:
 @dataclasses.dataclass
 class VersionMeta:
     version: int
-    labels: dict[str, str]
+    labels: list[str]
     created_at: str
     created_by: str
 
@@ -272,31 +264,17 @@ def _parse_document_response(data: dict[str, Any]) -> DocumentResponse:
         collection=data.get("collection", ""),
         id=data.get("id", ""),
         version=data.get("version", 0),
-        labels=data.get("labels", {}),
+        labels=data.get("labels", []),
         created_at=data.get("createdAt", data.get("created_at", "")),
         updated_at=data.get("updatedAt", data.get("updated_at", "")),
         data=data.get("data", {}),
     )
 
 
-def _parse_facet_value(data: dict[str, Any]) -> FacetValue:
-    return FacetValue(
-        value=data.get("value", ""),
-        count=data.get("count", 0),
-    )
-
-
 def _parse_document_list(data: dict[str, Any]) -> DocumentList:
-    raw_facets: dict[str, Any] = data.get("facets", {})
-    facets: dict[str, list[FacetValue]] = {
-        k: [_parse_facet_value(fv) for fv in v]
-        for k, v in raw_facets.items()
-    }
     return DocumentList(
         collection=data.get("collection", ""),
         total=data.get("total", 0),
-        cursor=data.get("cursor"),
-        facets=facets,
         items=[_parse_document_response(item) for item in data.get("items", [])],
     )
 
@@ -312,7 +290,7 @@ def _parse_document_paths(data: dict[str, Any]) -> DocumentPaths:
 def _parse_version_meta(data: dict[str, Any]) -> VersionMeta:
     return VersionMeta(
         version=data.get("version", 0),
-        labels=data.get("labels", {}),
+        labels=data.get("labels", []),
         created_at=data.get("createdAt", data.get("created_at", "")),
         created_by=data.get("createdBy", data.get("created_by", "")),
     )
