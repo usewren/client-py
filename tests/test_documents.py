@@ -7,7 +7,14 @@ import time
 
 import pytest
 
-from wren import AsyncWrenClient, WrenClient, WrenError, WrenNotFoundError
+from wren import (
+    AsyncWrenClient,
+    PromotedDocument,
+    TreePromoteResult,
+    WrenClient,
+    WrenError,
+    WrenNotFoundError,
+)
 
 from conftest import uid
 
@@ -176,6 +183,34 @@ class TestTrees:
         with pytest.raises(WrenNotFoundError):
             wren.trees.get_node(tree, "/blog/hello")
 
+    def test_promote(self, wren: WrenClient) -> None:
+        col = f"t-{uid()}"
+        tree = f"site-{uid()}"
+        a = wren.documents.create(col, {"title": "A1"})
+        b = wren.documents.create(col, {"title": "B1"})
+        wren.labels.set(col, a.id, "preview")
+        wren.documents.update(col, a.id, {"title": "A2"})
+        wren.trees.assign(tree, "/a", a.id)
+        wren.trees.assign(tree, "/b", b.id)
+
+        # Default: every document's current version becomes "published".
+        res = wren.trees.promote(tree)
+        assert isinstance(res, TreePromoteResult)
+        assert (res.tree, res.label, res.from_) == (tree, "published", None)
+        by_path = {p.path: p for p in res.promoted}
+        assert by_path["/a"] == PromotedDocument(path="/a", document_id=a.id, collection=col, version=2)
+        assert by_path["/b"].version == 1
+        assert wren.documents.get(col, a.id, label="published").data == {"title": "A2"}
+
+        # From a label: only documents carrying it move, under a custom label.
+        res = wren.trees.promote(tree, label="live", from_="preview")
+        assert (res.label, res.from_) == ("live", "preview")
+        assert [(p.path, p.version) for p in res.promoted] == [("/a", 1)]
+        assert wren.documents.get(col, a.id, label="live").data == {"title": "A1"}
+
+        with pytest.raises(WrenNotFoundError):
+            wren.trees.promote(f"nope-{uid()}")
+
 
 class TestAsync:
     async def test_documents_and_natural_keys(self, awren: AsyncWrenClient) -> None:
@@ -212,6 +247,11 @@ class TestAsync:
         assert (await awren.documents.get_paths(col, doc.id)).paths == [{"tree": tree, "path": "/a"}]
         assert [n.path for n in (await awren.trees.snapshot(tree)).nodes] == ["/a"]
         assert any(t.name == tree for t in await awren.trees.list())
+        promoted = await awren.trees.promote(tree, label="live", from_="published")
+        assert (promoted.tree, promoted.label, promoted.from_) == (tree, "live", "published")
+        assert [(p.path, p.document_id, p.version) for p in promoted.promoted] == [("/a", doc.id, 1)]
+        current = (await awren.documents.get(col, doc.id)).version
+        assert (await awren.trees.promote(tree)).promoted[0].version == current
         assert (await awren.trees.unassign(tree, "/a"))["removed"] is True
 
     async def test_collections_query_materialized(self, awren: AsyncWrenClient) -> None:

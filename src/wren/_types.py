@@ -175,6 +175,22 @@ class FullTree:
     nodes: list[FullTreeNode]
 
 
+@dataclasses.dataclass
+class PromotedDocument:
+    path: str
+    document_id: str
+    collection: str
+    version: int
+
+
+@dataclasses.dataclass
+class TreePromoteResult:
+    tree: str
+    label: str
+    from_: Optional[str]
+    promoted: list[PromotedDocument]
+
+
 # ---------------------------------------------------------------------------
 # API key types
 # ---------------------------------------------------------------------------
@@ -380,6 +396,24 @@ def _parse_full_tree(data: dict[str, Any]) -> FullTree:
     return FullTree(
         tree=data.get("tree", ""),
         nodes=[_parse_full_tree_node(n) for n in data.get("nodes", [])],
+    )
+
+
+def _parse_promoted_document(data: dict[str, Any]) -> PromotedDocument:
+    return PromotedDocument(
+        path=data.get("path", ""),
+        document_id=data.get("documentId", data.get("document_id", "")),
+        collection=data.get("collection", ""),
+        version=data.get("version", 0),
+    )
+
+
+def _parse_tree_promote_result(data: dict[str, Any]) -> TreePromoteResult:
+    return TreePromoteResult(
+        tree=data.get("tree", ""),
+        label=data.get("label", ""),
+        from_=data.get("from"),
+        promoted=[_parse_promoted_document(p) for p in data.get("promoted", [])],
     )
 
 

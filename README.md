@@ -14,6 +14,12 @@ with WrenClient("https://wren.aemwip.com", api_key="wren_...") as wren:
     wren.labels.set("articles", doc.id, "published")
     wren.trees.assign("site", "/blog/hello", doc.id)
 
+    # Promote a whole tree atomically: point "published" at every document's
+    # "preview" version in one transaction (omit from_ to promote current versions).
+    result = wren.trees.promote("site", label="published", from_="preview")
+    for p in result.promoted:
+        print(p.path, p.collection, p.version)
+
     page = wren.documents.list("articles", where="title:Hello", limit=20, offset=0)
     pinned = wren.documents.get("articles", doc.id, label="published")
 ```
