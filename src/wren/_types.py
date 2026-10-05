@@ -619,3 +619,101 @@ def _parse_validate_schema_result(data: dict[str, Any]) -> ValidateSchemaResult:
         invalid=data.get("invalid", 0),
         failures=data.get("failures", []),
     )
+
+
+# ---------------------------------------------------------------------------
+# Retention types
+# ---------------------------------------------------------------------------
+
+@dataclasses.dataclass
+class RetentionPolicy:
+    """A retention policy; ``collection`` is ``"*"`` for the org default. A version
+    is removed if any rule says so; current and labeled versions are always kept.
+    A policy without rules keeps everything."""
+
+    collection: str
+    labeled_only: bool
+    max_versions: Optional[int]
+    max_age_days: Optional[int]
+    after_label: Optional[str]
+    updated_at: str
+    updated_by: Optional[str]
+
+
+@dataclasses.dataclass
+class RetentionRun:
+    collection: str
+    versions_removed: int
+    bytes_freed: int
+    triggered_by: Optional[str]  # a user id, or "schedule" for the hourly run
+    ran_at: str
+
+
+@dataclasses.dataclass
+class RetentionOverview:
+    default: Optional[RetentionPolicy]
+    collections: list[RetentionPolicy]
+    runs: list[RetentionRun]
+
+
+@dataclasses.dataclass
+class RetentionCount:
+    """Versions, documents and bytes removed (or that would be); ``collection``
+    is None for the total."""
+
+    versions: int
+    documents: int
+    bytes: int
+    collection: Optional[str] = None
+
+
+@dataclasses.dataclass
+class RetentionResult:
+    collections: list[RetentionCount]  # only collections where something is removed
+    total: RetentionCount
+
+
+def _parse_retention_policy(data: dict[str, Any]) -> RetentionPolicy:
+    return RetentionPolicy(
+        collection=data.get("collection", ""),
+        labeled_only=data.get("labeledOnly", False),
+        max_versions=data.get("maxVersions"),
+        max_age_days=data.get("maxAgeDays"),
+        after_label=data.get("afterLabel"),
+        updated_at=data.get("updatedAt", ""),
+        updated_by=data.get("updatedBy"),
+    )
+
+
+def _parse_retention_overview(data: dict[str, Any]) -> RetentionOverview:
+    default = data.get("default")
+    return RetentionOverview(
+        default=_parse_retention_policy(default) if default else None,
+        collections=[_parse_retention_policy(p) for p in data.get("collections", [])],
+        runs=[
+            RetentionRun(
+                collection=r.get("collection", ""),
+                versions_removed=r.get("versionsRemoved", 0),
+                bytes_freed=r.get("bytesFreed", 0),
+                triggered_by=r.get("triggeredBy"),
+                ran_at=r.get("ranAt", ""),
+            )
+            for r in data.get("runs", [])
+        ],
+    )
+
+
+def _parse_retention_count(data: dict[str, Any]) -> RetentionCount:
+    return RetentionCount(
+        versions=data.get("versions", 0),
+        documents=data.get("documents", 0),
+        bytes=data.get("bytes", 0),
+        collection=data.get("collection"),
+    )
+
+
+def _parse_retention_result(data: dict[str, Any]) -> RetentionResult:
+    return RetentionResult(
+        collections=[_parse_retention_count(c) for c in data.get("collections", [])],
+        total=_parse_retention_count(data.get("total", {})),
+    )

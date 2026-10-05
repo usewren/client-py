@@ -30,10 +30,20 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+Retention policies (org owner or admin) remove old versions; a document's current version and every labeled version are always kept:
+
+```python
+result = wren.retention.preview("*", max_versions=20)  # what it would remove; changes nothing
+print(result.total.versions, result.total.documents, result.total.bytes)
+wren.retention.set("*", max_versions=20)               # org default
+wren.retention.set("contracts")                         # no rule: keep everything
+wren.retention.apply()                                  # now, or wait for the hourly run
+```
+
 - Python >= 3.9
 - Sync (`WrenClient`) and async (`AsyncWrenClient`) via httpx
 - Typed dataclass responses
-- Resources: documents, versions, labels, diff, collections, trees, query, materialized, keys, members, invites, permissions, webhooks
+- Resources: documents, versions, labels, diff, collections, trees, query, materialized, keys, members, invites, permissions, webhooks, retention
 
 ## Running the tests
 
