@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from wren._http import _AsyncHttpClient, _enc, _HttpClient
 from wren._types import (
     FullTree,
     TreeInfo,
     TreeNodeResult,
+    TreePromoteResult,
     _parse_full_tree,
     _parse_tree_info,
     _parse_tree_node_result,
+    _parse_tree_promote_result,
 )
 
 
@@ -47,6 +49,22 @@ class TreesResource:
         norm = _normalize_path(path)
         return self._http.request("DELETE", f"/tree/{_enc(tree_name)}{norm}")  # type: ignore[return-value]
 
+    def promote(
+        self, tree_name: str, *, label: Optional[str] = None, from_: Optional[str] = None
+    ) -> TreePromoteResult:
+        """Atomically point ``label`` (server default ``"published"``) at, for every
+        document in the tree, the version carrying ``from_`` -- or its current
+        version when ``from_`` is omitted. Documents without ``from_`` are left
+        alone. One transaction: readers never see a half-promoted tree.
+
+        Raises WrenNotFoundError if the tree is empty (or nothing carries
+        ``from_``) and WrenForbiddenError if a collection isn't writable.
+        """
+        data = self._http.request(
+            "POST", f"/tree/{_enc(tree_name)}/_promote", body={"label": label, "from": from_}
+        )
+        return _parse_tree_promote_result(data)
+
 
 class AsyncTreesResource:
     def __init__(self, http: _AsyncHttpClient) -> None:
@@ -76,3 +94,19 @@ class AsyncTreesResource:
     async def unassign(self, tree_name: str, path: str) -> dict[str, Any]:
         norm = _normalize_path(path)
         return await self._http.request("DELETE", f"/tree/{_enc(tree_name)}{norm}")  # type: ignore[return-value]
+
+    async def promote(
+        self, tree_name: str, *, label: Optional[str] = None, from_: Optional[str] = None
+    ) -> TreePromoteResult:
+        """Atomically point ``label`` (server default ``"published"``) at, for every
+        document in the tree, the version carrying ``from_`` -- or its current
+        version when ``from_`` is omitted. Documents without ``from_`` are left
+        alone. One transaction: readers never see a half-promoted tree.
+
+        Raises WrenNotFoundError if the tree is empty (or nothing carries
+        ``from_``) and WrenForbiddenError if a collection isn't writable.
+        """
+        data = await self._http.request(
+            "POST", f"/tree/{_enc(tree_name)}/_promote", body={"label": label, "from": from_}
+        )
+        return _parse_tree_promote_result(data)
