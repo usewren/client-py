@@ -6,6 +6,7 @@ from wren._http import _AsyncHttpClient, _HttpClient
 from wren.resources.collections import AsyncCollectionsResource, CollectionsResource
 from wren.resources.diff import AsyncDiffResource, DiffResource
 from wren.resources.documents import AsyncDocumentsResource, DocumentsResource
+from wren.resources.files import AsyncFilesResource, FilesResource
 from wren.resources.invites import AsyncInvitesResource, InvitesResource
 from wren.resources.keys import AsyncKeysResource, KeysResource
 from wren.resources.labels import AsyncLabelsResource, LabelsResource
@@ -38,6 +39,7 @@ class WrenClient:
         self.materialized = MaterializedResource(self._http)
         self.webhooks = WebhooksResource(self._http)
         self.retention = RetentionResource(self._http)
+        self.files = FilesResource(self._http)
 
     def close(self) -> None:
         self._http.close()
@@ -68,6 +70,7 @@ class AsyncWrenClient:
         self.materialized = AsyncMaterializedResource(self._http)
         self.webhooks = AsyncWebhooksResource(self._http)
         self.retention = AsyncRetentionResource(self._http)
+        self.files = AsyncFilesResource(self._http)
 
     async def aclose(self) -> None:
         await self._http.aclose()
