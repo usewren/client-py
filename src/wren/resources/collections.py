@@ -18,11 +18,11 @@ class CollectionsResource:
         self._http = http
 
     def list(self) -> list[CollectionInfo]:
-        data = self._http.request("GET", "/api/collections")
+        data = self._http.request("GET", "/collections")
         return [_parse_collection_info(c) for c in data.get("collections", [])]
 
     def get_schema(self, collection: str) -> Schema:
-        data = self._http.request("GET", f"/api/collections/{collection}/schema")
+        data = self._http.request("GET", f"/{collection}/_schema")
         return _parse_schema(data)
 
     def set_schema(
@@ -44,19 +44,20 @@ class CollectionsResource:
             "listColumns": list_columns,
             "indexes": indexes,
         }
-        data = self._http.request("PUT", f"/api/collections/{collection}/schema", body=body)
+        data = self._http.request("PUT", f"/{collection}/_schema", body=body)
         return _parse_schema(data)
 
     def delete_schema(self, collection: str) -> dict[str, Any]:
-        return self._http.request("DELETE", f"/api/collections/{collection}/schema")  # type: ignore[return-value]
+        return self._http.request("DELETE", f"/{collection}/_schema")  # type: ignore[return-value]
 
     def validate(
         self,
         collection: str,
         proposed_schema: Optional[dict[str, Any]] = None,
     ) -> ValidateSchemaResult:
-        body: dict[str, Any] = {"schema": proposed_schema} if proposed_schema is not None else {}
-        data = self._http.request("POST", f"/api/collections/{collection}/schema/validate", body=body)
+        # Without a body the server validates against the stored schema
+        body: Optional[dict[str, Any]] = {"schema": proposed_schema} if proposed_schema is not None else None
+        data = self._http.request("POST", f"/{collection}/_schema/validate", body=body)
         return _parse_validate_schema_result(data)
 
 
@@ -65,11 +66,11 @@ class AsyncCollectionsResource:
         self._http = http
 
     async def list(self) -> list[CollectionInfo]:
-        data = await self._http.request("GET", "/api/collections")
+        data = await self._http.request("GET", "/collections")
         return [_parse_collection_info(c) for c in data.get("collections", [])]
 
     async def get_schema(self, collection: str) -> Schema:
-        data = await self._http.request("GET", f"/api/collections/{collection}/schema")
+        data = await self._http.request("GET", f"/{collection}/_schema")
         return _parse_schema(data)
 
     async def set_schema(
@@ -91,17 +92,18 @@ class AsyncCollectionsResource:
             "listColumns": list_columns,
             "indexes": indexes,
         }
-        data = await self._http.request("PUT", f"/api/collections/{collection}/schema", body=body)
+        data = await self._http.request("PUT", f"/{collection}/_schema", body=body)
         return _parse_schema(data)
 
     async def delete_schema(self, collection: str) -> dict[str, Any]:
-        return await self._http.request("DELETE", f"/api/collections/{collection}/schema")  # type: ignore[return-value]
+        return await self._http.request("DELETE", f"/{collection}/_schema")  # type: ignore[return-value]
 
     async def validate(
         self,
         collection: str,
         proposed_schema: Optional[dict[str, Any]] = None,
     ) -> ValidateSchemaResult:
-        body: dict[str, Any] = {"schema": proposed_schema} if proposed_schema is not None else {}
-        data = await self._http.request("POST", f"/api/collections/{collection}/schema/validate", body=body)
+        # Without a body the server validates against the stored schema
+        body: Optional[dict[str, Any]] = {"schema": proposed_schema} if proposed_schema is not None else None
+        data = await self._http.request("POST", f"/{collection}/_schema/validate", body=body)
         return _parse_validate_schema_result(data)

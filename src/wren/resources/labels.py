@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from wren._http import _AsyncHttpClient, _HttpClient
+from wren._http import _AsyncHttpClient, _enc, _HttpClient
 
 
 class LabelsResource:
@@ -21,7 +21,7 @@ class LabelsResource:
             body["version"] = version
         return self._http.request(  # type: ignore[return-value]
             "POST",
-            f"/api/collections/{collection}/documents/{id}/labels",
+            f"/{collection}/{_enc(id)}/labels",
             body=body,
         )
 
@@ -42,6 +42,6 @@ class AsyncLabelsResource:
             body["version"] = version
         return await self._http.request(  # type: ignore[return-value]
             "POST",
-            f"/api/collections/{collection}/documents/{id}/labels",
+            f"/{collection}/{_enc(id)}/labels",
             body=body,
         )

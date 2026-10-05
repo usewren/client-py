@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+from urllib.parse import quote
 
 import httpx
 
@@ -28,9 +29,16 @@ def _raise_for_status(status: int, body: Any) -> None:
     if status == 404:
         raise WrenNotFoundError(body)
     if status == 422:
-        details: list[str] = body.get("details", []) if isinstance(body, dict) else []
+        # Schema violations carry a list of messages; an invalid schema carries one string.
+        raw = body.get("details", []) if isinstance(body, dict) else []
+        details: list[str] = [raw] if isinstance(raw, str) else [str(d) for d in raw]
         raise WrenValidationError(body, details)
     raise WrenError(status, body, message)
+
+
+def _enc(value: str) -> str:
+    """URL-encode one path segment (ids, natural keys, names)."""
+    return quote(value, safe="")
 
 
 def _filter_none(d: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
@@ -60,10 +68,13 @@ class _HttpClient:
         *,
         body: Optional[dict[str, Any]] = None,
         params: Optional[dict[str, Any]] = None,
+        document: Optional[dict[str, Any]] = None,
     ) -> Any:
         url = f"{self._base_url}/api/v1{path}"
         filtered_params = _filter_none(params)
-        filtered_body = _filter_none(body)
+        # A document is user data and is sent as-is; None-valued options are
+        # dropped from every other body.
+        filtered_body = document if document is not None else _filter_none(body)
 
         response = self._client.request(
             method,
@@ -115,10 +126,13 @@ class _AsyncHttpClient:
         *,
         body: Optional[dict[str, Any]] = None,
         params: Optional[dict[str, Any]] = None,
+        document: Optional[dict[str, Any]] = None,
     ) -> Any:
         url = f"{self._base_url}/api/v1{path}"
         filtered_params = _filter_none(params)
-        filtered_body = _filter_none(body)
+        # A document is user data and is sent as-is; None-valued options are
+        # dropped from every other body.
+        filtered_body = document if document is not None else _filter_none(body)
 
         response = await self._client.request(
             method,
