@@ -7,7 +7,7 @@ name = "usewren-client"
 version = "0.10.0"
 description = "Python client for the Wren versioned document store"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 requires-python = ">=3.9"
 dependencies = ["httpx>=0.27"]
 
