@@ -59,6 +59,11 @@ class DocumentResponse:
     created_at: str
     updated_at: str
     data: dict[str, Any]
+    # True when a write sent the same data as the current version: no new version
+    # was made (pass force=True to make one anyway).
+    unchanged: Optional[bool] = None
+    # The natural key, on responses of writes by key
+    natural_key: Optional[str] = None
 
 
 @dataclasses.dataclass
@@ -136,6 +141,84 @@ class Schema:
     natural_key: Optional[str] = None
     list_columns: Optional[list[str]] = None
     indexes: Optional[list[dict[str, Any]]] = None
+    # Set by writes that set a natural key: how many existing documents got their key registered.
+    keys_registered: Optional[int] = None
+
+
+# ---------------------------------------------------------------------------
+# Restore / undelete / label removal types
+# ---------------------------------------------------------------------------
+
+@dataclasses.dataclass
+class RestoreResult:
+    """Outcome of restoring a collection (or tree) to a label: documents whose
+    content changed back (``restored``), deleted ones brought back (``undeleted``),
+    ones without the label removed (``deleted``, only with ``delete_unlabeled``)
+    and ones already at the label (``unchanged``). ``collections`` lists the
+    collections that changed."""
+
+    label: str
+    restored: int
+    undeleted: int
+    deleted: int
+    unchanged: int
+    collections: list[str]
+
+
+@dataclasses.dataclass
+class TreeRestoreResult(RestoreResult):
+    tree: str = ""
+
+
+@dataclasses.dataclass
+class UndeleteResult:
+    id: str
+    undeleted: bool
+    version: int
+
+
+@dataclasses.dataclass
+class LabelRemoved:
+    id: str
+    label: str
+    removed: bool
+    version: int  # the version the label pointed at
+
+
+def _parse_restore_result(data: dict[str, Any]) -> RestoreResult:
+    return RestoreResult(
+        label=data.get("label", ""),
+        restored=data.get("restored", 0),
+        undeleted=data.get("undeleted", 0),
+        deleted=data.get("deleted", 0),
+        unchanged=data.get("unchanged", 0),
+        collections=data.get("collections", []),
+    )
+
+
+def _parse_tree_restore_result(data: dict[str, Any]) -> TreeRestoreResult:
+    return TreeRestoreResult(
+        label=data.get("label", ""),
+        restored=data.get("restored", 0),
+        undeleted=data.get("undeleted", 0),
+        deleted=data.get("deleted", 0),
+        unchanged=data.get("unchanged", 0),
+        collections=data.get("collections", []),
+        tree=data.get("tree", ""),
+    )
+
+
+def _parse_undelete_result(data: dict[str, Any]) -> UndeleteResult:
+    return UndeleteResult(id=data.get("id", ""), undeleted=data.get("undeleted", False), version=data.get("version", 0))
+
+
+def _parse_label_removed(data: dict[str, Any]) -> LabelRemoved:
+    return LabelRemoved(
+        id=data.get("id", ""),
+        label=data.get("label", ""),
+        removed=data.get("removed", False),
+        version=data.get("version", 0),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -284,6 +367,8 @@ def _parse_document_response(data: dict[str, Any]) -> DocumentResponse:
         created_at=data.get("createdAt", data.get("created_at", "")),
         updated_at=data.get("updatedAt", data.get("updated_at", "")),
         data=data.get("data", {}),
+        unchanged=data.get("unchanged"),
+        natural_key=data.get("naturalKey"),
     )
 
 
@@ -357,6 +442,7 @@ def _parse_schema(data: dict[str, Any]) -> Schema:
         natural_key=data.get("naturalKey", data.get("natural_key")),
         list_columns=data.get("listColumns", data.get("list_columns")),
         indexes=data.get("indexes"),
+        keys_registered=data.get("keysRegistered"),
     )
 
 

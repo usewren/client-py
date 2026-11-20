@@ -8,10 +8,12 @@ from wren._types import (
     TreeInfo,
     TreeNodeResult,
     TreePromoteResult,
+    TreeRestoreResult,
     _parse_full_tree,
     _parse_tree_info,
     _parse_tree_node_result,
     _parse_tree_promote_result,
+    _parse_tree_restore_result,
 )
 
 
@@ -65,6 +67,14 @@ class TreesResource:
         )
         return _parse_tree_promote_result(data)
 
+    def restore(self, tree_name: str, label: str) -> TreeRestoreResult:
+        """Restore every document mounted in the tree (files included) to the
+        version carrying ``label``, in one transaction -- e.g. back to a release
+        made with :meth:`promote`. Raises WrenNotFoundError if nothing carries the
+        label and WrenForbiddenError if a collection isn't writable."""
+        data = self._http.request("POST", f"/tree/{_enc(tree_name)}/_restore", body={"label": label})
+        return _parse_tree_restore_result(data)
+
 
 class AsyncTreesResource:
     def __init__(self, http: _AsyncHttpClient) -> None:
@@ -110,3 +120,11 @@ class AsyncTreesResource:
             "POST", f"/tree/{_enc(tree_name)}/_promote", body={"label": label, "from": from_}
         )
         return _parse_tree_promote_result(data)
+
+    async def restore(self, tree_name: str, label: str) -> TreeRestoreResult:
+        """Restore every document mounted in the tree (files included) to the
+        version carrying ``label``, in one transaction -- e.g. back to a release
+        made with :meth:`promote`. Raises WrenNotFoundError if nothing carries the
+        label and WrenForbiddenError if a collection isn't writable."""
+        data = await self._http.request("POST", f"/tree/{_enc(tree_name)}/_restore", body={"label": label})
+        return _parse_tree_restore_result(data)

@@ -46,10 +46,49 @@ wren.retention.set("contracts")                         # no rule: keep everythi
 wren.retention.apply()                                  # now, or wait for the hourly run
 ```
 
+Writes that change nothing make no version, and writes can be made conditional so two
+writers can't overwrite each other:
+
+```python
+from wren import WrenVersionMismatchError
+
+doc = wren.documents.get("articles", doc_id)
+same = wren.documents.update("articles", doc_id, doc.data)        # same.unchanged is True
+wren.documents.update("articles", doc_id, doc.data, force=True)   # a new version anyway
+try:
+    wren.documents.update("articles", doc_id, {"title": "Mine"}, if_version=doc.version)
+except WrenVersionMismatchError as e:
+    print("someone else wrote version", e.current_version)  # re-read and re-apply
+
+wren.documents.upsert_by_key("products", "a1", {"sku": "a1"}, if_version=0)    # create only
+wren.documents.upsert_by_key("products", "a1", {"sku": "a1"}, if_version="*")  # update only
+wren.documents.delete("articles", doc_id, if_version=3)
+```
+
+Labels as restore points, undelete, and diffs:
+
+```python
+wren.documents.restore("articles", "fixture", delete_unlabeled=True)  # whole collection back to a label
+wren.trees.restore("site", "release-1")                                # every document in a tree
+wren.documents.undelete("articles", doc_id)                            # with its history
+wren.labels.remove("articles", doc_id, "preview")
+wren.diff.compare("articles", doc_id, "published", 7, deep=True)      # labels or version numbers
+```
+
+Schemas can be changed field by field (`None` clears a field), and files in a binary
+collection keyed by file name can be uploaded and downloaded by name:
+
+```python
+wren.collections.patch_schema("assets", collection_type="binary", natural_key="filename")
+wren.files.upload_by_name("assets", "logo.svg", b"<svg/>")       # bytes, a file object or a path
+wren.files.upload_by_name("assets", "logo.svg", "build/logo.svg")  # same bytes: unchanged, no version
+data = wren.files.download_by_name("assets", "logo.svg", label="published")
+```
+
 - Python >= 3.9
 - Sync (`WrenClient`) and async (`AsyncWrenClient`) via httpx
 - Typed dataclass responses
-- Resources: documents, versions, labels, diff, collections, trees, query, materialized, keys, members, invites, permissions, webhooks, retention
+- Resources: documents, versions, labels, diff, collections, trees, files, query, materialized, keys, members, invites, permissions, webhooks, retention
 
 ## Running the tests
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "usewren-client"
-version = "0.9.0"
+version = "0.10.0"
 description = "Python client for the Wren versioned document store"
 readme = "README.md"
 license = { text = "MIT" }

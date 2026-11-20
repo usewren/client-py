@@ -13,6 +13,23 @@ from wren._types import (
 )
 
 
+# patch_schema field names: snake_case -> the API's camelCase
+_SCHEMA_FIELDS = {
+    "schema": "schema",
+    "display_name": "displayName",
+    "collection_type": "collectionType",
+    "natural_key": "naturalKey",
+    "list_columns": "listColumns",
+    "indexes": "indexes",
+}
+
+
+def _patch_body(fields: Optional[dict[str, Any]], kwargs: dict[str, Any]) -> dict[str, Any]:
+    merged = {**(fields or {}), **kwargs}
+    # Unknown names pass through unchanged, so the server can reject them (400).
+    return {_SCHEMA_FIELDS.get(k, k): v for k, v in merged.items()}
+
+
 class CollectionsResource:
     def __init__(self, http: _HttpClient) -> None:
         self._http = http
@@ -45,6 +62,15 @@ class CollectionsResource:
             "indexes": indexes,
         }
         data = self._http.request("PUT", f"/{collection}/_schema", body=body)
+        return _parse_schema(data)
+
+    def patch_schema(self, collection: str, fields: Optional[dict[str, Any]] = None, **kwargs: Any) -> Schema:
+        """Change only the given schema settings (``schema``, ``display_name``,
+        ``collection_type``, ``natural_key``, ``list_columns``, ``indexes``), as
+        keyword arguments or a dict (snake_case or camelCase keys); ``None``
+        clears a setting. Creates the schema if there is none. Setting a natural
+        key registers it for existing documents (``keys_registered``)."""
+        data = self._http.request("PATCH", f"/{collection}/_schema", document=_patch_body(fields, kwargs))
         return _parse_schema(data)
 
     def delete_schema(self, collection: str) -> dict[str, Any]:
@@ -93,6 +119,15 @@ class AsyncCollectionsResource:
             "indexes": indexes,
         }
         data = await self._http.request("PUT", f"/{collection}/_schema", body=body)
+        return _parse_schema(data)
+
+    async def patch_schema(self, collection: str, fields: Optional[dict[str, Any]] = None, **kwargs: Any) -> Schema:
+        """Change only the given schema settings (``schema``, ``display_name``,
+        ``collection_type``, ``natural_key``, ``list_columns``, ``indexes``), as
+        keyword arguments or a dict (snake_case or camelCase keys); ``None``
+        clears a setting. Creates the schema if there is none. Setting a natural
+        key registers it for existing documents (``keys_registered``)."""
+        data = await self._http.request("PATCH", f"/{collection}/_schema", document=_patch_body(fields, kwargs))
         return _parse_schema(data)
 
     async def delete_schema(self, collection: str) -> dict[str, Any]:
